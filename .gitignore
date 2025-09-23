@@ -205,3 +205,27 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Security and Infrastructure-specific files
+config/cluster_config.sh
+*.env
+.env*
+
+# Cluster log files
+jobs/*/logs/
+*.stdlog
+
+# Potentially sensitive data files
+data/
+*.h5ad
+*.csv
+*.pkl
+
+# Results and outputs (may contain sensitive paths)
+results/
+outputs/
+
+# Generated figures (optional, uncomment if needed)
+# figures/*.png
+# figures/*.pdf
+# figures/*.svg
