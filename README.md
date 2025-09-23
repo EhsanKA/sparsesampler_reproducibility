@@ -9,6 +9,41 @@ Reproducibility workflow for sparse sampling experiments on single-cell datasets
 - R environment
 - Conda/Mamba
 
+## Requirements
+
+Install required Python packages:
+```bash
+pip install scanpy pandas numpy scipy matplotlib seaborn plotly
+pip install scikit-learn umap-learn
+```
+
+Install scSampler:
+```bash
+pip install scsampler
+```
+
+For R dependencies:
+```r
+# Install Seurat v5 (required for atomic sketching)
+install.packages("Seurat")
+
+# Other R packages
+install.packages(c("data.table", "ggplot2", "dplyr"))
+```
+
+## Setup
+
+### Clone Hopper Repository
+
+Clone the Hopper repository to the required locations:
+```bash
+cd notebooks/lcmv
+git clone https://github.com/bendemeo/hopper.git
+
+cd ../mcc
+git clone https://github.com/bendemeo/hopper.git
+```
+
 ## Usage
 
 ### 1. Configuration
@@ -76,7 +111,7 @@ python umaps/mcc/umaps_mcc.py
 
 ## Notes
 
-- The directories `notebooks/lcmv/hopper` and `notebooks/mcc/hopper` are clones of the Hopper repository
+- Clone the Hopper repository to `notebooks/lcmv/hopper` and `notebooks/mcc/hopper` before running jobs
 - Configuration must be set before running jobs
 - Jobs should be run sequentially as listed
 - Check `logs/` directories for job status
