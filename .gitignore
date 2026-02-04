@@ -251,3 +251,7 @@ slurm-*.out
 # Text output files (analysis results)
 analysis/*.txt
 analysis/**/*.txt
+
+# Embedded git repositories (hopper)
+notebooks/mcc_01/hopper/
+notebooks/mcc_05/hopper/
