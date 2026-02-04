@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import os
+import sys
 import numpy as np
 import pandas as pd
 import pickle
@@ -10,6 +11,19 @@ import logging
 from datetime import datetime
 from itertools import product
 import matplotlib.patches as mpatches
+import scanpy as sc
+import scipy.sparse
+
+# Add analysis directory to path to import rare cell type functions
+script_dir = os.path.dirname(os.path.abspath(__file__))
+analysis_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(script_dir))), 'analysis')
+if analysis_dir not in sys.path:
+    sys.path.insert(0, analysis_dir)
+
+from refined_rare_cell_type_definition import (
+    calculate_cell_type_distances,
+    identify_rare_cell_types_distance_and_frequency
+)
 
 # Set up logging
 
@@ -33,14 +47,32 @@ MCC_REFERENCES = [5, 10, 20, 25, 30]
 METHODS = ['random', 'sps', 'hopper', 'atomic', 'scsampler']
 LCMV_SIZES = [50000, 100000, 200000]
 MCC_SIZES = [50000, 100000, 200000, 300000]
-REPS = [i for i in range(5)]
+REPS = [0]  # Using only 1 rep (rep 0) instead of 5 reps
 label_key = 'celltype'
 
 # File paths
-file_path_env = 'projects/sparsesampler_reproducibility/data'
+def get_data_path():
+    """Get data path from environment variable or derive from script location."""
+    project_root = os.environ.get('PROJECT_ROOT')
+    if project_root is None:
+        # Derive project root from script location
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(script_dir)))
+    return os.path.join(project_root, 'data')
+
+def get_figures_dir():
+    """Get figures directory path from environment variable or derive from script location."""
+    project_root = os.environ.get('PROJECT_ROOT')
+    if project_root is None:
+        # Derive project root from script location
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(script_dir)))
+    return os.path.join(project_root, 'figures')
+
+file_path_env = get_data_path()
 LCMV_PATH = os.path.join(file_path_env, 'lcmv/benchmark')
 MCC_PATH = os.path.join(file_path_env, 'mcc/benchmark')
-FIGURE_DIR = 'projects/sparsesampler_reproducibility/figures'
+FIGURE_DIR = get_figures_dir()
 
 plt.rcParams.update({
     'font.size': 20,
@@ -70,12 +102,36 @@ def calculate_rare_cell_coverage(reference_obs, references, sizes, path, dataset
     res = {}
     rare_type_counts = {}  # Dictionary to store sum counts of rare types for each reference size
     keys = [label_key, 'count', 'method', 'ref_size', 'sample_size', 'rep', 'real_count']
+    
+    # Define frequency threshold percentage based on dataset
+    # Using 1% for both MCC and LCMV as they are the original datasets
+    frequency_threshold_pct = 1.0
+    
     for ref in references:
         obs = reference_obs[ref]
         real_counts = obs[label_key].value_counts()
-        rare_types = real_counts[real_counts < obs.shape[0] / 100].index.tolist()
+        
+        # Load adata to calculate distances for proper rare cell definition
+        address = os.path.join(path, f"{ref}/adata.h5ad")
+        adata = sc.read_h5ad(address)
+        
+        # Calculate cell type distances
+        cell_type_df = calculate_cell_type_distances(adata, label_key=label_key)
+        
+        # Identify rare cell types using distance AND frequency criteria
+        # Rare = distance > 75th percentile AND frequency < 1%
+        total_cells = obs.shape[0]
+        rare_types, _, _ = identify_rare_cell_types_distance_and_frequency(
+            cell_type_df, 
+            total_cells, 
+            distance_percentile=75, 
+            frequency_threshold_pct=frequency_threshold_pct
+        )
+        
+        logger.info(f"Dataset: {dataset_type}, Ref: {ref}, Rare types identified: {rare_types}")
+        
         # Store the sum count of rare types for this reference size
-        rare_type_counts[ref] = real_counts[rare_types].sum()
+        rare_type_counts[ref] = real_counts[rare_types].sum() if len(rare_types) > 0 else 0
         obs['rare'] = obs[label_key].isin(rare_types)
         obs['real_count'] = obs[label_key].map(real_counts)
         label_order = obs[label_key].value_counts().index.values
@@ -95,7 +151,12 @@ def calculate_rare_cell_coverage(reference_obs, references, sizes, path, dataset
                     samples_address = os.path.join(path, f"{ref}/{method}/{size}/{rep}/results.pkl")
                     with open(samples_address, 'rb') as handle:
                         samples = pickle.load(handle)
-                    indices = obs.iloc[samples[0]].index.tolist()
+                    # Handle different pickle structures: SPS has nested tuple (inner_tuple, time)
+                    # where inner_tuple is (indices_list, ...), other methods have (indices, time)
+                    sample_indices = samples[0]
+                    if isinstance(sample_indices, tuple):
+                        sample_indices = sample_indices[0]
+                    indices = obs.iloc[sample_indices].index.tolist()
                 value_counts = obs.loc[indices, label_key].value_counts()
                 counts, labels = value_counts.tolist(), value_counts.index.tolist()
                 method_rep, size_rep, ref_rep, rep_rep = ([x] * len(counts) for x in [method, size, ref, rep])

@@ -11,7 +11,14 @@ import scipy.sparse
 
 
 # Get the file path from environment variable
-file_path_env = 'projects/sparsesampler_reproducibility/data'
+# Get PROJECT_ROOT from environment or derive from script location
+project_root = os.environ.get('PROJECT_ROOT')
+if project_root is None:
+    # Derive project root from script location (script is in notebooks/mcc/)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(script_dir))
+
+file_path_env = os.path.join(project_root, 'data')
 
 
 REFERENCES = [5, 10, 20, 25, 30]
@@ -31,7 +38,7 @@ import numpy as np
 import pandas as pd
 
 def generate_sps(adata, size, seed = 1234):
-    return sample(X=adata.X, size=size, seed=seed)
+    return sample(X=adata.X, size=size, seed=seed, auto_k=False, k=None, feature_index=18)
 
 def generate_scsampler(adata, size, seed = 1234):
     print(f'********* #Start# *********')

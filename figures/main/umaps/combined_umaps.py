@@ -123,18 +123,28 @@ class CombinedUMAPVisualizer:
             samples_address = os.path.join(path, f"{ref}/{method}/{size}/{rep}/results.pkl")
             with open(samples_address, 'rb') as handle:
                 samples = pickle.load(handle)
+            # Handle different pickle structures: SPS has nested tuple (inner_tuple, time)
+            # where inner_tuple is (indices_list, ...), other methods have (indices, time)
             indices = samples[0]
+            if isinstance(indices, tuple):
+                indices = indices[0]
         return indices
 
     def mark_sampled_points(self, adata: sc.AnnData, sample_ids, method: str) -> sc.AnnData:
         """Mark sampled points in the dataset."""
         adata.obs[method] = 'False'
-        if isinstance(sample_ids[0], (str, np.str_)):
-            row_indices = adata.obs.index.get_indexer(sample_ids)
+        # Convert to flat numpy array of integers
+        sample_ids_flat = np.asarray(sample_ids).flatten()
+        if isinstance(sample_ids_flat[0], (str, np.str_)):
+            # String indices - get positions in the index
+            row_indices = adata.obs.index.get_indexer(sample_ids_flat)
             row_indices = row_indices[row_indices >= 0]
         else:
-            row_indices = sample_ids
-        adata.obs.iloc[row_indices, adata.obs.columns.get_loc(method)] = 'True'
+            # Integer indices - use directly
+            row_indices = sample_ids_flat.astype(int)
+        # Use loc with observation names for safer assignment
+        obs_names_to_mark = adata.obs.index[row_indices]
+        adata.obs.loc[obs_names_to_mark, method] = 'True'
         logger.info(f"Sampled points for {method}: {adata.obs[method].value_counts()}")
         return adata
 
@@ -251,10 +261,16 @@ def main():
     method2 = 'random'
     size = 100000
     rep = 0
-    data_path = 'projects/sparsesampler_reproducibility/data'
+    # Get data path from environment variable or derive from script location
+    project_root = os.environ.get('PROJECT_ROOT')
+    if project_root is None:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(script_dir)))
+    data_path = os.path.join(project_root, 'data')
+    figures_dir = os.path.join(project_root, 'figures', 'main', 'umaps')
     
     try:
-        visualizer = CombinedUMAPVisualizer(data_path, test_mode=args.test)
+        visualizer = CombinedUMAPVisualizer(data_path, test_mode=args.test, figures_dir=figures_dir)
         
         # Process MCC data
         mcc_adata = visualizer.load_reference_data('mcc', mcc_ref)

@@ -45,18 +45,36 @@ MCC_REFERENCES = [5, 10, 20, 25, 30]
 METHODS = ['sps', 'hopper', 'atomic', 'scsampler']
 LCMV_SIZES = [50000, 100000, 200000]
 MCC_SIZES = [50000, 100000, 200000, 300000]
-REPS = [i for i in range(5)]
+REPS = [0]  # Using only 1 rep (rep 0) instead of 5 reps
 label_key = 'celltype'
 
 # File paths
-file_path_env = 'projects/sparsesampler_reproducibility/data'
+def get_data_path():
+    """Get data path from environment variable or derive from script location."""
+    project_root = os.environ.get('PROJECT_ROOT')
+    if project_root is None:
+        # Derive project root from script location
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(script_dir)))
+    return os.path.join(project_root, 'data')
+
+def get_figures_dir():
+    """Get figures directory path from environment variable or derive from script location."""
+    project_root = os.environ.get('PROJECT_ROOT')
+    if project_root is None:
+        # Derive project root from script location
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(script_dir)))
+    return os.path.join(project_root, 'figures')
+
+file_path_env = get_data_path()
 LCMV_DIR = "lcmv/benchmark"
 MCC_DIR = "mcc/benchmark"
 LCMV_PATH = os.path.join(file_path_env, LCMV_DIR)
 MCC_PATH = os.path.join(file_path_env, MCC_DIR)
 
 # Output directory for figures
-FIGURE_DIR = 'projects/sparsesampler_reproducibility/figures'
+FIGURE_DIR = get_figures_dir()
 
 # Plotting configuration
 plt.rcParams.update({

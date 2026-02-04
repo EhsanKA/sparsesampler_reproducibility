@@ -14,35 +14,43 @@ fi
 REFERENCES=(5 10 20 25 30)
 methods=('sps')
 SIZES=(50000 100000 200000 300000)
-REPS=(0 1 2 3 4)
+REPS=(0)
 
 # Calculate total combinations
 total_combinations=$(( ${#REFERENCES[@]} * ${#methods[@]} * ${#SIZES[@]} * ${#REPS[@]} ))
 
 # Submit the job array for all combinations
-qsub -t 1-$total_combinations <<EOF
+sbatch <<EOF
 #!/bin/bash
 
-#$ -N sps_array_job_python
-#$ -m beas
-#$ -M ${CLUSTER_EMAIL}
-#$ -o ${LOG_PATH}/mcc_production/logs/output_sps_SGE_TASK_ID.stdlog
-#$ -j y
-#$ -l h_rt=06:00:00
-#$ -l m_mem_free=200G
+#SBATCH -J sps_array_job_python
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=${CLUSTER_EMAIL}
+#SBATCH -o ${LOG_PATH}/mcc_production/logs/output_sps_%A_%a.stdlog
+#SBATCH -t 06:00:00
+#SBATCH --mem=200G
+#SBATCH -A ohler
+#SBATCH -p long
+#SBATCH -C cascade-lake
+#SBATCH --nodelist=maxg11,maxg12,maxg13,maxg14,maxg15,maxg16,maxg17,maxg18,maxg21,maxg22,maxg23,maxg24,maxg25,maxg26
+#SBATCH -N 1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --gres=localtmp:50G
+#SBATCH --array=1-${total_combinations}
 
 # Define the arrays inside the job script
 REFERENCES=(5 10 20 25 30)
 methods=('sps')
 SIZES=(50000 100000 200000 300000)
-REPS=(0 1 2 3 4)
+REPS=(0)
 
 # Initial seed for reproducibility
 # initial_seed=789
 initial_seed=900
 
-# Compute task index based on SGE_TASK_ID
-task_id=\$SGE_TASK_ID
+# Compute task index based on SLURM_ARRAY_TASK_ID
+task_id=\$SLURM_ARRAY_TASK_ID
 
 # Calculate indices
 rep_index=\$(( (task_id - 1) % \${#REPS[@]} ))
@@ -70,6 +78,9 @@ seed=\$((initial_seed + task_id))
 source ~/.bashrc
 conda activate ${CONDA_ENV}
 
+# Set PROJECT_ROOT environment variable
+export PROJECT_ROOT=${PROJECT_ROOT}
+
 # Change directory to the working folder
 cd ${NOTEBOOK_PATH}/mcc
 
@@ -84,6 +95,11 @@ fi
 
 # Debugging info (optional)
 echo "Running with Reference=\$ref, Method=\$method, Size=\$size, Rep=\$rep, Seed=\$seed"
+echo "Node: \$(hostname)"
+echo "CPU Info: \$(lscpu | grep 'Model name' | cut -d: -f2 | xargs)"
+echo "CPU Min MHz: \$(lscpu | grep 'CPU min MHz' | cut -d: -f2 | xargs)"
+echo "CPU Max MHz: \$(lscpu | grep 'CPU max MHz' | cut -d: -f2 | xargs)"
+echo "CPU Current MHz: \$(lscpu | grep '^CPU MHz' | head -1 | cut -d: -f2 | xargs)"
 
 # Run the Python script with the computed parameters
 python parallel.py --ref \$ref --method \$method --size \$size --rep \$rep --seed \$seed

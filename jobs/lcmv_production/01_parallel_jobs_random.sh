@@ -28,7 +28,7 @@ qsub -t 1-$total_combinations <<EOF
 #$ -j y
 #$ -l h_rt=06:00:00
 #$ -l m_mem_free=120G
-
+#$ -l hostname="maxg16"
 # Define the arrays inside the job script
 REFERENCES=(1 5 10 20 34)
 methods=('random')
