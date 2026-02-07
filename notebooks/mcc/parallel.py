@@ -38,7 +38,7 @@ import numpy as np
 import pandas as pd
 
 def generate_sps(adata, size, seed = 1234):
-    return sample(X=adata.X, size=size, seed=seed, auto_k=False, k=None, feature_index=18)
+    return sample(X=adata.X, size=size, seed=seed, auto_k=False, k=None, feature_index=12)
 
 def generate_scsampler(adata, size, seed = 1234):
     print(f'********* #Start# *********')

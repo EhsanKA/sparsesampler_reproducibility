@@ -362,8 +362,8 @@ def plot_combined_figure(sample_size=SAMPLE_SIZE):
                     ax_cov.plot(x, y, '-o', color=coverage_colors[j % len(coverage_colors)],
                                label=ref_name, markersize=3, alpha=0.85)
         
-        # Mark default EVR index (18)
-        ax_cov.axvline(x=18, color='red', linestyle='--', alpha=0.6, linewidth=1.2)
+        # Mark default EVR index (12)
+        ax_cov.axvline(x=12, color='red', linestyle='--', alpha=0.6, linewidth=1.2)
         
         ax_cov.set_xlabel('EVR Index')
         ax_cov.set_ylabel('Coverage (%)')
@@ -429,8 +429,8 @@ def plot_combined_figure(sample_size=SAMPLE_SIZE):
             ax_rank.fill_between(x, y, 1, where=np.array(y) <= 1, 
                                 alpha=0.15, color='green', label='#1')
         
-        # Mark default EVR index (18)
-        ax_rank.axvline(x=18, color='red', linestyle='--', alpha=0.6, linewidth=1.2)
+        # Mark default EVR index (12)
+        ax_rank.axvline(x=12, color='red', linestyle='--', alpha=0.6, linewidth=1.2)
         
         # Horizontal line at rank 1
         ax_rank.axhline(y=1, color='green', linestyle=':', alpha=0.5, linewidth=1)
