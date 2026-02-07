@@ -16,9 +16,14 @@ Benchmarking and reproducibility code for the SparseSampler (SPS) method on sing
 cp config/cluster_config.sh.template config/cluster_config.sh
 # Edit with your cluster settings
 
-# 2. Clone Hopper into each notebook directory
+# 2. Download data
+cd data && bash download.sh
+
+# 3. Clone Hopper into each notebook directory
 cd notebooks/lcmv && git clone https://github.com/bendemeo/hopper.git
 cd ../mcc && git clone https://github.com/bendemeo/hopper.git
+cd ../mcc_01 && git clone https://github.com/bendemeo/hopper.git
+cd ../mcc_05 && git clone https://github.com/bendemeo/hopper.git
 ```
 
 ## Reproducing Results
@@ -29,8 +34,14 @@ cd ../mcc && git clone https://github.com/bendemeo/hopper.git
 # LCMV
 cd notebooks/lcmv && python 0_check_the_data.py && python 01_atomic_data_converter.py
 
-# MCC (repeat for mcc_01, mcc_05)
+# MCC
 cd notebooks/mcc && python 0_check_the_data.py && python 01_atomic_data_converter.py
+
+# MCC_01
+cd notebooks/mcc_01 && python 0_check_the_data.py && python 01_atomic_data_converter.py
+
+# MCC_05
+cd notebooks/mcc_05 && python 0_check_the_data.py && python 01_atomic_data_converter.py
 ```
 
 ### Step 2: Run Sampling Benchmarks
@@ -81,13 +92,19 @@ bash run_create_sampling_methods_table.sh
 
 ### Step 6: Generate Figures
 
-All figures at once via SLURM array (recommended):
+Coverage, time, and UMAP figures via SLURM array:
 
 ```bash
 sbatch figures/generate_figures_array.sh
 ```
 
-Or individually:
+EVR/RF/Rank analysis figure (run separately, requires Steps 3-5):
+
+```bash
+python figures/revision/combined_evr_rf_rank_figure.py
+```
+
+Or run all figure scripts individually:
 
 ```bash
 # Main figures
@@ -160,6 +177,9 @@ sparsesampler_reproducibility/
 | Rev. Coverage | `revision/figure1_combined_coverage.jpg` | Coverage at 0.1% and 0.5% rarity |
 | Rev. MCC_01 Cov. | `revision/supp_figure3_mcc_01_coverage.jpg` | MCC 0.1% rarity coverage |
 | Rev. MCC_05 Cov. | `revision/supp_figure3_mcc_05_coverage.jpg` | MCC 0.5% rarity coverage |
+| Rev. Time | `revision/figure1_combined_time.jpg` | Runtime at 0.1% and 0.5% rarity |
+| Rev. MCC_01 Time | `revision/supp_figure5-6_mcc_01_time.jpg` | MCC 0.1% rarity detailed runtime |
+| Rev. MCC_05 Time | `revision/supp_figure5-6_mcc_05_time.jpg` | MCC 0.5% rarity detailed runtime |
 | EVR Analysis | `revision/combined_evr_rf_rank_figure_{50k,100k,200k}.jpg` | EVR index sensitivity (coverage, RF F1, rank) |
 
 ## Key Parameters
