@@ -234,6 +234,13 @@ outputs/
 # Project-specific additions
 # ============================================
 
+# Extra documentation files (consolidated into README.md)
+PROJECT_STRUCTURE.md
+REPRODUCIBILITY.md
+REVIEWER_RESPONSE_SUMMARY.md
+figures/FIGURE_DESCRIPTIONS.md
+figures/README.md
+
 # All log directories
 logs/
 **/logs/
