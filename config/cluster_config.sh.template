@@ -1,0 +1,18 @@
+# Cluster Configuration Template
+# Copy this file to cluster_config.sh and customize for your environment
+
+# Email for job notifications (required)
+export CLUSTER_EMAIL="your.email@example.com"
+
+# Project paths (customize for your setup)
+export PROJECT_ROOT="projects/sparsesampler_reproducibility"
+export DATA_PATH="${PROJECT_ROOT}/data"
+export NOTEBOOK_PATH="${PROJECT_ROOT}/notebooks"
+export LOG_PATH="${PROJECT_ROOT}/jobs"
+
+# Conda environment name
+export CONDA_ENV="sps"
+
+# Optional: Cluster-specific settings
+# export CLUSTER_PARTITION="your_partition"
+# export CLUSTER_ACCOUNT="your_account"
